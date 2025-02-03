@@ -15,7 +15,7 @@ Este projeto permite interagir com documentos PDF através de um chatbot utiliza
 - Streamlit
 - LangChain
 - OpenAI API (GPT-4o)
-- PyPDF2
+- PyPDFLoader
 
 ## 📌 Pré-requisitos
 

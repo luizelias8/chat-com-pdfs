@@ -1,29 +1,39 @@
 import os
+import tempfile
 import streamlit as st
-from PyPDF2 import PdfReader
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
 
 # Obtém a chave da API do ambiente
 chave_api = os.getenv('OPENAI_API_KEY')
 
-def carregar_arquivos(arquivos):
+def carregar_documentos_pdf(lista_arquivos):
     """Carrega o conteúdo de múltiplos arquivos PDF."""
-    # Variável para armazenar o texto extraído de todos os PDFs
-    documento = ''
+    textos_extraidos = [] # Lista para armazenar os textos extraídos de cada PDF
 
     # Itera sobre cada arquivo enviado
-    for arquivo in arquivos:
-        # Cria um leitor para o arquivo PDF
-        leitor_pdf = PdfReader(arquivo)
-        # Itera sobre cada página do PDF
-        for pagina in leitor_pdf.pages:
-            # Adiciona o texto extraído à variável
-            documento += pagina.extract_text()
+    for arquivo_pdf in lista_arquivos:
+        # Cria um arquivo temporário para salvar o conteúdo do PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as arquivo_temporario:
+            # Escreve o conteúdo do objeto BytesIO no arquivo temporário
+            arquivo_temporario.write(arquivo_pdf.read())
+            caminho_arquivo = arquivo_temporario.name # Obtém o caminho do arquivo temporário
 
-    # Retorna o texto completo extraído de todos os PDFs
-    return documento
+        # Carrega o PDF utilizando o PyPDFLoader com o caminho do arquivo temporário
+        carregador_pdf = PyPDFLoader(caminho_arquivo)
+        documentos_carregados = carregador_pdf.load() # Retorna uma lista de documentos com atributo 'page_content'
+
+        # Itera sobre cada documento carregado e armazena seu conteúdo
+        for documento in documentos_carregados:
+            textos_extraidos.append(documento.page_content)
+
+        # Remove o arquivo temporário após o processamento
+        os.remove(caminho_arquivo)
+
+    # Retorna o conteúdo concatenado de todos os PDFs
+    return '\n'.join(textos_extraidos)
 
 def main():
     """Função principal para configurar e executar a interface da aplicação Streamlit."""
@@ -60,7 +70,7 @@ def main():
                 # Exibe um spinner indicando que o processamento está em andamento
                 with st.spinner('Processando documentos...'):
                     # Processa os arquivos PDF e extrai o conteúdo textual
-                    documento = carregar_arquivos(arquivos_pdfs)
+                    documento = carregar_documentos_pdf(arquivos_pdfs)
 
                     # Escapa as chaves '{' e '}' para evitar erros no .format()
                     # Isso substitui todas as ocorrências de '{' por '{{' e '}' por '}}
