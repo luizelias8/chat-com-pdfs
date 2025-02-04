@@ -47,9 +47,9 @@ def main():
         st.session_state.chain = None
 
     # Configura o título e o ícone da página no Streamlit
-    st.set_page_config(page_title='Chat com arquivos PDF', page_icon='🤖')
+    st.set_page_config(page_title='Chat com arquivos PDF')
     # Exibe o título principal da aplicação
-    st.title('Chat com arquivos PDF')
+    st.title('💬 Chat com arquivos PDF')
 
     # Configura a barra lateral para o upload de documentos
     with st.sidebar:
