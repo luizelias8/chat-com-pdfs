@@ -108,6 +108,9 @@ def main():
                     modelo_chat = ChatOpenAI(model='gpt-4o', api_key=chave_api)
                     st.session_state.chain = template | modelo_chat
 
+                # Mostra mensagem de sucesso após o processamento
+                st.success('Documentos processados com sucesso!')
+
     # Se não houver chain configurada, mostra a mensagem de boas-vindas
     if st.session_state.chain is None:
         with st.chat_message('ai'):
