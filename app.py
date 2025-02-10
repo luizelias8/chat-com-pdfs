@@ -13,6 +13,9 @@ load_dotenv()
 # Obtém a chave da API do ambiente
 chave_api = os.getenv('OPENAI_API_KEY')
 
+# Mensagens do sistema
+MENSAGEM_BOAS_VINDAS = 'Bem-vindo! 🤝 Para iniciarmos nossa conversa, utilize o menu lateral para carregar seus documentos PDF. Depois disso, poderei responder suas perguntas sobre o conteúdo deles.'
+
 def carregar_documentos_pdf(lista_arquivos):
     """Carrega o conteúdo de múltiplos arquivos PDF."""
     textos_extraidos = [] # Lista para armazenar os textos extraídos de cada PDF
@@ -41,19 +44,21 @@ def carregar_documentos_pdf(lista_arquivos):
 
 def main():
     """Função principal para configurar e executar a interface da aplicação Streamlit."""
-    # Inicializa a memória de conversa no session_state, se ainda não existir
-    if 'memoria' not in st.session_state:
-        # Cria uma instância de ConversationBufferMemory para armazenar o histórico do chat
-        st.session_state.memoria = ConversationBufferMemory()
-
-    # Inicializa a chain no session_state, se ainda não existir
-    if 'chain' not in st.session_state:
-        st.session_state.chain = None
-
     # Configura o título e o ícone da página no Streamlit
     st.set_page_config(page_title='Chat com arquivos PDF')
     # Exibe o título principal da aplicação
     st.title('💬 Chat com arquivos PDF')
+
+    # Inicializa a memória de conversa no session_state, se ainda não existir
+    if 'memoria' not in st.session_state:
+        # Cria uma instância de ConversationBufferMemory para armazenar o histórico do chat
+        st.session_state.memoria = ConversationBufferMemory()
+        # Adiciona a mensagem inicial do assistente ao histórico
+        st.session_state.memoria.chat_memory.add_ai_message(MENSAGEM_BOAS_VINDAS)
+
+    # Inicializa a chain no session_state, se ainda não existir
+    if 'chain' not in st.session_state:
+        st.session_state.chain = None
 
     # Configura a barra lateral para o upload de documentos
     with st.sidebar:
@@ -103,7 +108,11 @@ def main():
                     modelo_chat = ChatOpenAI(model='gpt-4o', api_key=chave_api)
                     st.session_state.chain = template | modelo_chat
 
-    if st.session_state.chain is not None:
+    # Se não houver chain configurada, mostra a mensagem de boas-vindas
+    if st.session_state.chain is None:
+        with st.chat_message('ai'):
+            st.write(MENSAGEM_BOAS_VINDAS)
+    else:
         # Exibir as mensagens anteriores armazenadas na memória
         # A propriedade buffer_as_messages retorna uma lista de objetos de mensagem com atributos 'type' e 'content'
         for mensagem in st.session_state.memoria.buffer_as_messages:
